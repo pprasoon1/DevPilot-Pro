@@ -3,6 +3,7 @@ const cors = require('cors');
 const connectDB = require('./db');
 const authRoutes = require('./routes/auth');
 const authenticate = require('./middleware/auth');
+const projectRoutes = require('./routes/projects');
 
 const app = express();
 const PORT = 5000;
@@ -16,6 +17,7 @@ app.use(express.json()); // Parse JSON request bodies
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
 
 // Example protected route
 app.get('/api/protected', authenticate, (req, res) => {
