@@ -15,7 +15,11 @@ const PORT = 5000;
 connectDB();
 
 // Middleware
-app.use(cors()); // Enable CORS for frontend requests
+app.use(cors(
+  {
+    origin: '*',
+  }
+)); // Enable CORS for frontend requests
 app.use(express.json()); // Parse JSON request bodies
 
 // Routes
