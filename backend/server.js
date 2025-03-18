@@ -9,7 +9,7 @@ const path = require('path');
 
 const app = express();
 const PORT = 5000;
-const __dirname = path.resolve();
+
 
 // Connect to MongoDB
 connectDB();
@@ -22,7 +22,7 @@ app.use(express.json()); // Parse JSON request bodies
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 
-if(process.env.NODE_ENV === production){
+if(process.env.NODE_ENV === 'production'){
   app.use(express.static(path.join(__dirname, '/client/dist')));
 
   app.get('*', (req, res) => {
