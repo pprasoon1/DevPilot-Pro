@@ -73,11 +73,34 @@ function MainApp({ webcontainerInstance, serverUrl, onLogout }) {
     }
   };
 
-  // **Handle content changes in the editor**
+  // **Handle content changes in the editor and sync with backend**
   const handleContentChange = async (newContent) => {
-    if (webcontainerInstance && currentFile) {
+    if (webcontainerInstance && currentFile && selectedProject) {
       setFileContent(newContent);
       await webcontainerInstance.fs.writeFile(currentFile, newContent);
+
+      // Immediately update the backend with the changed file
+      const updatedFiles = {
+        ...selectedProject.files,
+        [currentFile]: newContent,
+      };
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${BACKEND_URL}/api/projects/${selectedProject._id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ name: selectedProject.name, files: updatedFiles }),
+        });
+        if (!res.ok) throw new Error('Failed to save file');
+        console.log('File saved successfully to backend');
+        // Update local state with the new files
+        setSelectedProject({ ...selectedProject, files: updatedFiles });
+      } catch (error) {
+        console.error('Error saving file to backend:', error);
+      }
     }
   };
 
@@ -86,13 +109,16 @@ function MainApp({ webcontainerInstance, serverUrl, onLogout }) {
     try {
       const token = localStorage.getItem('token');
       const newProjectName = `Project ${projects.length + 1}`;
+      const defaultFiles = {
+        '/index.js': 'console.log("Hello, World!");',
+      };
       const res = await fetch(`${BACKEND_URL}/api/projects`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: newProjectName, files: {} }),
+        body: JSON.stringify({ name: newProjectName, files: defaultFiles }),
       });
       if (!res.ok) throw new Error('Failed to create project');
       const newProject = await res.json();
@@ -103,11 +129,11 @@ function MainApp({ webcontainerInstance, serverUrl, onLogout }) {
     }
   };
 
-  // **Save the current project**
+  // **Save the current project (manual save for all files)**
   const handleSaveProject = async () => {
     if (!selectedProject || !webcontainerInstance) return;
     try {
-      const files = await webcontainerInstance.fs.readDir('/', { recursive: true });
+      const files = await webcontainerInstance.fs.readdir('/', { recursive: true });
       const fileTree = {};
       for (const file of files) {
         if (file.isFile()) {
@@ -126,6 +152,7 @@ function MainApp({ webcontainerInstance, serverUrl, onLogout }) {
       if (!res.ok) throw new Error('Failed to save project');
       const updatedProject = await res.json();
       setSelectedProject(updatedProject);
+      console.log('Project saved successfully');
     } catch (error) {
       console.error('Error saving project:', error);
     }
