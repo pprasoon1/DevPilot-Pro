@@ -4,7 +4,7 @@ const router = express.Router();
 const Project = require('../models/Project');
 const User = require('../models/User');
 const authenticate = require('../middleware/auth'); // Assumes you have JWT authentication middleware
-
+const EduProject = require('../models/EduProject');
 // Create a new project
 router.post('/', authenticate, async (req, res) => {
   const { name, files } = req.body;
@@ -71,4 +71,24 @@ router.delete('/:id', authenticate, async (req, res) => {
   }
 });
 
+router.post('/startEdu', authenticate, async (req, res) => {
+  const { eduProjectId } = req.body;
+  try {
+    const eduProject = await EduProject.findById(eduProjectId);
+    if (!eduProject) return res.status(404).json({ message: 'Educational project not found' });
+
+    const newProject = new Project({
+      name: eduProject.title,
+      owner: req.userId, // From authentication middleware
+      files: eduProject.initialFiles,
+      isEducational: true,
+      eduProjectId: eduProject._id,
+      currentStep: 0,
+    });
+    await newProject.save();
+    res.status(201).json(newProject);
+  } catch (error) {
+    res.status(500).json({ message: 'Error starting educational project' });
+  }
+});
 module.exports = router;

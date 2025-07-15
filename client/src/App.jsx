@@ -7,7 +7,8 @@ import MainApp from './components/MainApp';
 import { WebContainer } from '@webcontainer/api';
 import { files } from './files';
 
-const BACKEND_URL =import.meta.env.MODE === 'development' ? 'http://localhost:5000' :"/"; // External backend URL
+const BACKEND_URL = 'http://localhost:5000'; // External backend URL
+// const BACKEND_URL = 'https://devpilot-backend.onrender.com';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
